@@ -31,24 +31,29 @@ class PaymentResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'Transactions';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Payments');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Select::make('customer_id')
                     ->label('Customer')
+                    ->translateLabel()
                     ->options(Customer::whereStatus(true)->pluck('name', 'id'))->searchable()
                     ->required()
-                    ->translateLabel()
                     ->live()
                     ->afterStateUpdated(function (Set $set, $state) {
                         $set('payment_ammount', Customer::find($state)->service->price ?? null);
                     }),
                 Forms\Components\Select::make('payment_type_id')
                     ->label('Payment Type')
+                    ->translateLabel()
                     ->options(PaymentType::all()->pluck('name', 'id'))->searchable()
-                    ->required()
-                    ->translateLabel(),
+                    ->required(),
                 Forms\Components\TextInput::make('payment_ammount')
                     ->required()
                     ->numeric()

@@ -43,6 +43,8 @@ class LatestPayments extends BaseWidget
                     ->searchable()
                     ->badge(),
                 Tables\Columns\TextColumn::make('customer.service.name')
+                    ->label('Service')
+                    ->translateLabel()
                     ->description(fn (Payment $record): string =>
                         Number::currency($record->customer?->service?->price, 'IDR'))
                     ->sortable()

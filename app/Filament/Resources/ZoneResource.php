@@ -20,6 +20,11 @@ class ZoneResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static ?string $navigationGroup = 'Manage';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Zones');
+    }
+
     public static function form(Form $form): Form
     {
         return $form

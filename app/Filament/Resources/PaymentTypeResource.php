@@ -20,15 +20,20 @@ class PaymentTypeResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
     protected static ?string $navigationGroup = 'Manage';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Payment Types');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->label('Name')
+                    ->translateLabel()
                     ->required()
-                    ->maxLength(255)
-                    ->translateLabel(),
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('description')
                     ->label('Description')
                     ->translateLabel(),

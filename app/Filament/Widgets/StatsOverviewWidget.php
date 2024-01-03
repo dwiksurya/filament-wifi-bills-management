@@ -44,9 +44,9 @@ class StatsOverviewWidget extends BaseWidget
         };
 
         return [
-            Stat::make('Total Earnings', Number::currency($monthlyEarnings, 'IDR')),
-            Stat::make('Monthly Earnings', Number::currency($monthlyEarnings, 'IDR')),
-            Stat::make('Total Active Customers', $formatNumber($totalCustomers))
+            Stat::make(__('Total Earnings'), Number::currency($monthlyEarnings, 'IDR')),
+            Stat::make(__('Monthly Earnings'), Number::currency($monthlyEarnings, 'IDR')),
+            Stat::make(__('Total Active Customers'), $formatNumber($totalCustomers))
         ];
     }
 }

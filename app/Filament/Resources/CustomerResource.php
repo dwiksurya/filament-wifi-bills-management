@@ -27,6 +27,11 @@ class CustomerResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'Manage';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Customers');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -69,14 +74,22 @@ class CustomerResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
+                    ->translateLabel()
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone_number')
+                    ->label('Phone Number')
+                    ->translateLabel()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('zone.name')
+                    ->label('Zone')
+                    ->translateLabel()
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('service.name')
+                    ->label('Service')
+                    ->translateLabel()
                     ->description(fn (Customer $record): string => Number::currency($record->service?->price, 'IDR'))
                     ->sortable()
                     ->searchable(),
