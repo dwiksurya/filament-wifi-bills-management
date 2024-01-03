@@ -2,9 +2,14 @@
 
 namespace App\Filament\Imports;
 
+use App\Models\Zone;
+use App\Models\Service;
 use App\Models\Customer;
-use Filament\Actions\Imports\ImportColumn;
+use Filament\Forms\Components\Select;
 use Filament\Actions\Imports\Importer;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\TextInput;
+use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Models\Import;
 
 class CustomerImporter extends Importer
@@ -15,21 +20,11 @@ class CustomerImporter extends Importer
     {
         return [
             ImportColumn::make('name')
-                ->requiredMapping()
                 ->rules(['required', 'max:255']),
-            ImportColumn::make('zone_id')
-                ->requiredMapping()
-                ->numeric()
-                ->rules(['required', 'integer']),
-            ImportColumn::make('service_id')
-                ->requiredMapping()
-                ->numeric()
-                ->rules(['required', 'integer']),
             ImportColumn::make('phone_number')
                 ->rules(['max:255']),
             ImportColumn::make('address'),
             ImportColumn::make('status')
-                ->requiredMapping()
                 ->boolean()
                 ->rules(['required', 'boolean']),
         ];
@@ -37,12 +32,30 @@ class CustomerImporter extends Importer
 
     public function resolveRecord(): ?Customer
     {
-        // return Customer::firstOrNew([
-        //     // Update existing records, matching them by `$this->data['column_name']`
-        //     'email' => $this->data['email'],
-        // ]);
+        return new Customer([
+            'name' => $this->data['name'],
+            'phone_number' => $this->data['phone_number'],
+            'address' => $this->data['address'],
+            'status' => $this->data['status'],
+            'service_id' => $this->options['service_id'],
+            'zone_id' => $this->options['zone_id']
+        ]);
+    }
 
-        return new Customer();
+    public static function getOptionsFormComponents(): array
+    {
+        return [
+            Select::make('zone_id')
+                    ->label('Zone')
+                    ->options(Zone::all()->pluck('name', 'id'))->searchable()
+                    ->required()
+                    ->translateLabel(),
+            Select::make('service_id')
+                    ->label('Service')
+                    ->options(Service::all()->pluck('name', 'id'))->searchable()
+                    ->required()
+                    ->translateLabel(),
+        ];
     }
 
     public static function getCompletedNotificationBody(Import $import): string
