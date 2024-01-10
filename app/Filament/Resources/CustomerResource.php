@@ -5,15 +5,20 @@ namespace App\Filament\Resources;
 use Filament\Forms;
 use App\Models\Zone;
 use Filament\Tables;
+use App\Models\Payment;
 use App\Models\Service;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\PaymentType;
+use App\Enums\PaymentStatus;
 use App\Enums\CustomerStatus;
 use Illuminate\Support\Number;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\ImportAction;
+use Filament\Tables\Columns\Layout\Split;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Imports\CustomerImporter;
 use App\Filament\Resources\CustomerResource\Pages;
@@ -105,19 +110,16 @@ class CustomerResource extends Resource
                         '0' => 'danger'
                     })
                     ->sortable(),
+
+
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                // Action::make('paid')
-                //     ->label('Make it Paid')
-                //     ->translateLabel()
-                //     ->requiresConfirmation()
-                //     ->action(fn (Customer $record) => $record->delete())
+                Tables\Actions\EditAction::make()
             ])
-            ->recordUrl(function (){
+            ->recordUrl(function () {
                 return null;
             })
             ->bulkActions([

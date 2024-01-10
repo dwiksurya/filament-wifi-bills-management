@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\PaymentHistoryResource;
 use Filament\Tables;
 use App\Models\Payment;
 use App\Models\Shop\Order;
@@ -21,7 +22,7 @@ class LatestPayments extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(PaymentResource::getEloquentQuery())
+            ->query(PaymentHistoryResource::getEloquentQuery())
             ->defaultPaginationPageOption(5)
             ->defaultSort('payment_date', 'desc')
             ->columns([

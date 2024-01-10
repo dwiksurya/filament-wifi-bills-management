@@ -17,6 +17,8 @@ use Illuminate\Support\Number;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PaymentResource\Pages;
@@ -26,7 +28,8 @@ use App\Filament\Resources\Shop\ProductResource\Widgets\PaymentStats;
 
 class PaymentResource extends Resource
 {
-    protected static ?string $model = Payment::class;
+    protected static ?string $model = Customer::class;
+    protected static ?string $title = "Rekening";
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'Transactions';
@@ -76,82 +79,85 @@ class PaymentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('payment_date')
-                    ->label('Payment Date')
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
                     ->translateLabel()
-                    ->date()
+                    ->description(fn (Customer $record): string => $record->zone?->name)
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('customer.name')
-                    ->label('Customer Name')
+                Tables\Columns\TextColumn::make('phone_number')
+                    ->label('Phone Number')
                     ->translateLabel()
-                    ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('paymentType.name')
-                    ->label('Payment Type')
+                    ->searchable()
+                    ->visibleFrom('md'),
+                Tables\Columns\TextColumn::make('service.name')
+                    ->label('Service')
                     ->translateLabel()
+                    ->description(fn (Customer $record): string => Number::currency($record->service?->price, 'IDR'))
                     ->sortable()
                     ->searchable()
-                    ->badge(),
-                Tables\Columns\TextColumn::make('customer.service.name')
-                    ->description(fn (Payment $record): string =>
-                    Number::currency($record->customer?->service?->price, 'IDR'))
-                    ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('payment_ammount')
-                    ->label('Payment Ammount')
-                    ->translateLabel()
-                    ->money('IDR')
-                    ->sortable()
-                    ->searchable(),
+                    ->visibleFrom('md'),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
                     ->badge()
-                    ->translateLabel(),
-                Tables\Columns\TextColumn::make('description')
-                    ->label('Description')
+                    ->alignment('center')
+                    ->label('Status Pembayaran')
                     ->translateLabel()
+                    ->getStateUsing(
+                        fn (Customer $record): string =>
+                        $record->isPaid() ? __('Paid') : __('Not Paid Yet')
+                    )
+                    ->icon(fn (Customer $record): string => match ($record->isPaid()) {
+                        true => 'heroicon-o-check-circle',
+                        false => 'heroicon-o-x-circle'
+                    })
+                    ->color(fn (Customer $record): string => match ($record->isPaid()) {
+                        true => 'success',
+                        false => 'danger'
+                    })->visibleFrom('md'),
+
             ])
             ->filters([
-                SelectFilter::make('customer_id')
-                    ->label('Customer')
-                    ->translateLabel()
-                    ->multiple()
-                    ->options(Customer::all()->pluck('name', 'id'))->searchable(),
-                Filter::make('payment_date')
-                    ->form([
-                        Forms\Components\DatePicker::make('startDate')
-                            ->label('Start Date')
-                            ->translateLabel(),
-                        Forms\Components\DatePicker::make('endDate')
-                            ->label('End Date')
-                            ->translateLabel()
-                            ->default(now()),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['startDate'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('payment_date', '>=', $date),
-                            )
-                            ->when(
-                                $data['endDate'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('payment_date', '<=', $date),
-                            );
-                    })
-            ])->actions([
-                Action::make('paid')
-                    ->label('Cancel')
-                    ->translateLabel()
-                    ->requiresConfirmation()
+                //
+            ])
+            ->actions([
+                Action::make('make_it_paid')
+                    ->disabled(fn (Customer $record): string => $record->isPaid())
                     ->button()
-                    ->action(
-                        fn (Payment $record) =>
-                        $record->update([
-                            'status' => PaymentStatus::CANCELED
-                        ])
+                    ->form([
+                        Select::make('payment_type_id')
+                            ->label('Payment Type')
+                            ->translateLabel()
+                            ->options(PaymentType::query()->pluck('name', 'id'))
+                            ->required(),
+                    ])
+                    ->color(
+                        fn (Customer $record): string =>
+                        $record->isPaid() ? 'success' : 'primary'
                     )
-            ]);
+                    ->outlined(
+                        fn (Customer $record): string => $record->isPaid()
+                    )
+                    ->label(
+                        fn (Customer $record): string =>
+                        $record->isPaid() ? __('Paid') : __('Make it paid')
+                    )
+                    ->action(function (array $data, Customer $record): void {
+
+                        if (!$record->isPaid()) {
+                            Payment::create([
+                                'payment_type_id' => $data['payment_type_id'],
+                                'customer_id' => $record->id,
+                                'payment_ammount' => $record->service->price,
+                                'payment_date' => now(),
+                                'status' => PaymentStatus::PAID
+                            ]);
+                        }
+
+                    })
+            ])
+            ->recordUrl(function () {
+                return null;
+            });
     }
 
     public static function getRelations(): array
